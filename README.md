@@ -79,7 +79,7 @@ kubectl get pods mypod -o=jsonpath='{.spec.containers[0].env}' |jq
 ]
 ```
 
-To disable the injection of the proxy vatiables you can use the following annotation `"kubernetes.azure.com/no-http-proxy-vars":"true"`.
+To disable the injection of the proxy variables you can use the following annotation `"kubernetes.azure.com/no-http-proxy-vars":"true"`.
 
 ```
  kubectl run --rm -ti --image=nicolaka/netshoot  --overrides='{ "apiVersion": "v1", "metadata": {"annotations": { "kubernetes.azure.com/no-http-proxy-vars":"true" } } }' mypod /bin/bash

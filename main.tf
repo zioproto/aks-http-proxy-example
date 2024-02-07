@@ -66,39 +66,28 @@ resource "azurerm_virtual_machine" "main" {
 
 # AKS cluster
 
-resource "azurerm_kubernetes_cluster" "this" {
-  name                = "myakscluster"
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  dns_prefix          = "myakscluster"
-  depends_on          = [azurerm_virtual_machine.main]
+module "aks" {
+  depends_on = [azurerm_resource_group.this]
 
-  identity {
-    type = "SystemAssigned"
-  }
+  source                     = "Azure/aks/azurerm"
+  version                    = "7.6.0"
+  resource_group_name        = azurerm_resource_group.this.name
+  prefix                     = "myakscluster"
+  network_plugin             = "azure"
+  vnet_subnet_id             = azurerm_subnet.internal.id
+  net_profile_dns_service_ip = "192.168.0.5"
+  net_profile_service_cidr   = "192.168.0.0/16"
+  rbac_aad                   = false
 
-  default_node_pool {
-    name           = "default"
-    node_count     = 2
-    vm_size        = "Standard_DS3_v2"
-    vnet_subnet_id = azurerm_subnet.internal.id
-  }
-
-  network_profile {
-    network_plugin = "azure"
-    service_cidr   = "192.168.0.0/16"
-    dns_service_ip = "192.168.0.5"
-  }
-
-  http_proxy_config {
+  http_proxy_config = {
     http_proxy = local.proxy_ip
     no_proxy   = toset(["localhost", "127.0.0.1", "10.0.0.0/8"])
   }
-  lifecycle {
-    ignore_changes = [http_proxy_config.0.https_proxy, http_proxy_config.0.no_proxy]
-  }
 
+  agents_size = "Standard_DS3_v2"
 }
+
+
 
 # use nic private IP for proxy address
 locals {
